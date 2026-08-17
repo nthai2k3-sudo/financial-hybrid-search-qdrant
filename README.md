@@ -193,8 +193,8 @@ src/hybrid_search/
 
 ```bash
 # Clone repository
-git clone https://github.com/example/hybrid-search-finance.git
-cd hybrid-search-finance
+git clone https://github.com/satyam671/financial-hybrid-search-qdrant.git
+cd financial-hybrid-search-qdrant
 
 # Create virtual environment & activate
 python -m venv .venv
