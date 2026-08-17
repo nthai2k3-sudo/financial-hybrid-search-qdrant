@@ -42,6 +42,7 @@ qdrant_data/
 # Environment variables & secrets
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 *.cert
