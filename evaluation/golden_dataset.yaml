@@ -1,0 +1,190 @@
+queries:
+  # -------------------------------------------------------------
+  # Category 1: Exact Terminology (Lexical & Exact Entity Queries)
+  # -------------------------------------------------------------
+  - id: "exact_01"
+    category: "exact_terminology"
+    query: "Find references to NVIDIA's H200 supply constraints in Q4 filings."
+    description: "Exact entity and product SKU matching"
+    relevant_terms: ["H200", "supply constraints", "NVIDIA", "accelerator"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "exact_02"
+    category: "exact_terminology"
+    query: "Disclosures regarding TSMC Arizona fab foundry expansion"
+    description: "Exact geographic facility and company name"
+    relevant_terms: ["TSMC", "Arizona", "fab", "foundry", "expansion"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "exact_03"
+    category: "exact_terminology"
+    query: "Revenue recognition under ASC 606 for long term contracts"
+    description: "Specific accounting standard designation"
+    relevant_terms: ["ASC 606", "revenue recognition", "contracts"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "exact_04"
+    category: "exact_terminology"
+    query: "Apple share repurchase authorization and dividend payments"
+    description: "Specific capital allocation terms for AAPL"
+    relevant_terms: ["Apple", "share repurchase", "dividends", "authorization"]
+    expected_winner: "bm25 / bm25_dense"
+
+  - id: "exact_05"
+    category: "exact_terminology"
+    query: "Advanced Micro Devices MI300 accelerator shipments"
+    description: "Specific competitive product SKU"
+    relevant_terms: ["AMD", "MI300", "accelerator", "shipments"]
+    expected_winner: "bm25 / sparse"
+
+  # -------------------------------------------------------------
+  # Category 2: Semantic Questions (Conceptual & Vocabulary Mismatch)
+  # -------------------------------------------------------------
+  - id: "semantic_01"
+    category: "semantic_questions"
+    query: "Find evidence that semiconductor companies are reducing capital expenditure because of weaker AI accelerator demand."
+    description: "Conceptual query with vocabulary divergence (capex, infrastructure slowdown)"
+    relevant_terms: ["capital expenditure", "capex", "investment", "demand softening", "infrastructure spending"]
+    expected_winner: "dense"
+
+  - id: "semantic_02"
+    category: "semantic_questions"
+    query: "Risks related to international trade restrictions and export controls on advanced compute"
+    description: "Conceptual regulatory risk without exact country name"
+    relevant_terms: ["export controls", "trade restrictions", "licensing requirements", "tariffs"]
+    expected_winner: "dense"
+
+  - id: "semantic_03"
+    category: "semantic_questions"
+    query: "Impact of power and energy availability constraints on data center expansion plans"
+    description: "Utility and infrastructure bottleneck concept"
+    relevant_terms: ["electricity", "power grid", "energy availability", "data center power"]
+    expected_winner: "dense"
+
+  - id: "semantic_04"
+    category: "semantic_questions"
+    query: "Cloud customer optimization and deceleration in enterprise infrastructure spending"
+    description: "Cost management and spending moderation concepts"
+    relevant_terms: ["workload optimization", "spending moderation", "cost consciousness"]
+    expected_winner: "dense"
+
+  - id: "semantic_05"
+    category: "semantic_questions"
+    query: "Supply chain dependencies on single-source assembly and test packaging providers"
+    description: "Single point of failure and subcontracting risks"
+    relevant_terms: ["sole-source", "single-source", "foundry", "advanced packaging", "OSAT"]
+    expected_winner: "dense"
+
+  # -------------------------------------------------------------
+  # Category 3: Mixed Queries (Specific Entity + Semantic Intent)
+  # -------------------------------------------------------------
+  - id: "mixed_01"
+    category: "mixed_queries"
+    query: "Microsoft Azure capital expenditure growth driven by OpenAI infrastructure deployment"
+    description: "Named companies + conceptual investment driver"
+    relevant_terms: ["Microsoft", "Azure", "OpenAI", "capex", "infrastructure"]
+    expected_winner: "sparse_dense / bm25_dense"
+
+  - id: "mixed_02"
+    category: "mixed_queries"
+    query: "Alphabet Google Cloud TPU versus third-party GPU silicon investment"
+    description: "Specific hardware chips + comparative infrastructure investment"
+    relevant_terms: ["Google", "Alphabet", "TPU", "GPU", "silicon"]
+    expected_winner: "sparse_dense / bm25_dense"
+
+  - id: "mixed_03"
+    category: "mixed_queries"
+    query: "Meta Platforms infrastructure investments and generative AI server deployment"
+    description: "Specific tech company + generative AI capex theme"
+    relevant_terms: ["Meta", "infrastructure", "servers", "AI compute"]
+    expected_winner: "sparse_dense / bm25_dense"
+
+  - id: "mixed_04"
+    category: "mixed_queries"
+    query: "Intel foundry services operating losses and wafer capacity buildout"
+    description: "Specific business unit + financial results and capacity buildout"
+    relevant_terms: ["Intel", "foundry", "IFS", "operating loss", "capacity"]
+    expected_winner: "sparse_dense / bm25_dense"
+
+  - id: "mixed_05"
+    category: "mixed_queries"
+    query: "Amazon AWS custom silicon Trainium and Inferentia cost efficiency"
+    description: "Specific ASIC chip brand names + efficiency concept"
+    relevant_terms: ["AWS", "Trainium", "Inferentia", "custom silicon", "cost"]
+    expected_winner: "sparse_dense / bm25_dense"
+
+  # -------------------------------------------------------------
+  # Category 4: Rare Terminology (Low-Frequency Domain Specifics)
+  # -------------------------------------------------------------
+  - id: "rare_01"
+    category: "rare_terminology"
+    query: "Goodwill impairment and intangible asset amortization in technology acquisitions"
+    description: "Specific accounting impairment nomenclature"
+    relevant_terms: ["goodwill impairment", "amortization", "intangible assets"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "rare_02"
+    category: "rare_terminology"
+    query: "Remaining performance obligations RPO backlog growth"
+    description: "Contract backlog accounting acronym"
+    relevant_terms: ["RPO", "remaining performance obligations", "deferred revenue"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "rare_03"
+    category: "rare_terminology"
+    query: "CoWoS chip-on-wafer-on-substrate packaging bottleneck"
+    description: "Specialized 2.5D semiconductor packaging acronym"
+    relevant_terms: ["CoWoS", "chip on wafer", "advanced packaging"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "rare_04"
+    category: "rare_terminology"
+    query: "Variable interest entity VIE structure disclosures and regulatory risks"
+    description: "Legal cross-border corporate structure acronym"
+    relevant_terms: ["VIE", "variable interest entity", "foreign ownership"]
+    expected_winner: "bm25 / sparse"
+
+  - id: "rare_05"
+    category: "rare_terminology"
+    query: "Foreign exchange hedging contract fair value fluctuations"
+    description: "Treasury derivative financial instruments"
+    relevant_terms: ["derivative contracts", "hedging", "fair value", "foreign currency"]
+    expected_winner: "bm25 / sparse"
+
+  # -------------------------------------------------------------
+  # Category 5: Long Natural Language (Analyst Research Inquiries)
+  # -------------------------------------------------------------
+  - id: "long_01"
+    category: "long_natural_language"
+    query: "What are the primary supply chain risk factors that could prevent semiconductor manufacturers from fulfilling AI data center hardware orders in 2024 and 2025?"
+    description: "Multi-clause analyst investigation"
+    relevant_terms: ["supply chain", "risk factors", "semiconductor", "fulfillment", "lead times"]
+    expected_winner: "sparse_dense / dense"
+
+  - id: "long_02"
+    category: "long_natural_language"
+    query: "How are hyperscalers managing depreciation schedules and useful life estimates for AI servers and network equipment?"
+    description: "Complex operational accounting inquiry"
+    relevant_terms: ["depreciation", "useful life", "servers", "network equipment", "accounting estimate"]
+    expected_winner: "sparse_dense / dense"
+
+  - id: "long_03"
+    category: "long_natural_language"
+    query: "Which semiconductor companies highlighted customer concentration where a small number of direct customers account for a significant percentage of total revenue?"
+    description: "Governance and customer concentration disclosure query"
+    relevant_terms: ["customer concentration", "percentage of revenue", "direct customers", "top customers"]
+    expected_winner: "sparse_dense / dense"
+
+  - id: "long_04"
+    category: "long_natural_language"
+    query: "How do management discussions describe the trade-off between custom ASIC accelerators and general purpose GPUs for model training and inference?"
+    description: "Strategic architecture comparison query"
+    relevant_terms: ["ASIC", "accelerators", "GPU", "training", "inference", "custom silicon"]
+    expected_winner: "sparse_dense / dense"
+
+  - id: "long_05"
+    category: "long_natural_language"
+    query: "What disclosures exist regarding geopolitical risks and potential disruptions to semiconductor fabrication in the Taiwan Strait?"
+    description: "Geopolitical risk analysis query"
+    relevant_terms: ["geopolitical", "Taiwan", "fabrication", "disruption", "manufacturing"]
+    expected_winner: "sparse_dense / dense"

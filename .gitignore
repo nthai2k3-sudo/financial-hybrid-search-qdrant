@@ -1,0 +1,57 @@
+# Python virtual environments & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing, logs & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+.system_generated/
+
+# Local data & vector storage (DO NOT COMMIT RAW/PROCESSED DATA OR LOCAL EMBEDDINGS)
+data/raw/
+data/processed/
+qdrant_storage/
+qdrant_data/
+*.db
+*.sqlite
+
+# Environment variables & secrets
+.env
+.env.*
+*.pem
+*.key
+*.cert
+secrets.yaml
+
+# IDEs & OS metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

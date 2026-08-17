@@ -1,0 +1,70 @@
+companies:
+  - ticker: "NVDA"
+    name: "NVIDIA Corporation"
+    cik: "0001045810"
+    sector: "Semiconductors"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "AAPL"
+    name: "Apple Inc."
+    cik: "0000320193"
+    sector: "Consumer Electronics"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "MSFT"
+    name: "Microsoft Corporation"
+    cik: "0000789019"
+    sector: "Cloud & Software"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "GOOGL"
+    name: "Alphabet Inc."
+    cik: "0001652044"
+    sector: "Internet & Cloud"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "AMZN"
+    name: "Amazon.com, Inc."
+    cik: "0001018724"
+    sector: "E-Commerce & Cloud"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "META"
+    name: "Meta Platforms, Inc."
+    cik: "0001326801"
+    sector: "Digital Media & AI"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "TSLA"
+    name: "Tesla, Inc."
+    cik: "0001318605"
+    sector: "Automotive & Energy"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "AMD"
+    name: "Advanced Micro Devices, Inc."
+    cik: "0000002488"
+    sector: "Semiconductors"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "INTC"
+    name: "Intel Corporation"
+    cik: "0000050863"
+    sector: "Semiconductors"
+    geography: "US"
+    forms: ["10-K", "10-Q"]
+
+  - ticker: "TSM"
+    name: "Taiwan Semiconductor Manufacturing Co., Ltd."
+    cik: "0001046179"
+    sector: "Semiconductors"
+    geography: "Taiwan"
+    forms: ["20-F", "6-K"]

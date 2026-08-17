@@ -1,0 +1,35 @@
+edgar:
+  user_agent: "FinancialIntelligenceResearch/1.0 (research@example.com)"
+  rate_limit_per_second: 8
+  request_timeout_seconds: 30
+  max_retries: 3
+  cache_dir: "data/raw/edgar"
+
+chunking:
+  chunk_size_tokens: 500
+  chunk_overlap_tokens: 100
+
+embeddings:
+  dense_model: "BAAI/bge-small-en-v1.5"
+  bm25_model: "Qdrant/bm25"
+  sparse_model: "prithivida/Splade_PP_en_v1"
+  dense_batch_size: 64
+  sparse_batch_size: 32
+
+qdrant:
+  url: "http://localhost:6333"         # For Qdrant Cloud: "https://your-cluster.eu-central.aws.cloud.qdrant.io:6333"
+  api_key: null                        # For Qdrant Cloud: "your-api-key-here" (or set QDRANT_API_KEY env var)
+  local_path: "qdrant_data"
+  prefer_local_embedded: false
+  collection_name: "financial_docs"
+  dense_vector_size: 384
+  upsert_batch_size: 100
+
+retrieval:
+  default_k: 10
+  prefetch_k: 50
+  rrf_constant: 60
+
+benchmark:
+  num_latency_runs: 5
+  k_values: [5, 10, 20]
