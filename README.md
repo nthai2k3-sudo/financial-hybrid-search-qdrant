@@ -11,8 +11,9 @@
 > This repository provides the production reference implementation and empirical benchmarking suite for the article:  
 > **[Building Hybrid Search for Financial Intelligence: An Empirical Comparison of Lexical, Dense, Sparse, and Dual-Stage Reranking on Qdrant](https://medium.com/@satyam671/financial-hybrid-search-qdrant)**  
 > *(Covers theoretical mechanics, failure modes of single-vector systems, and vector database evaluation criteria).*
-
 ---
+<img width="1672" height="941" alt="hybrid search for financial intelligence hero image" src="https://github.com/user-attachments/assets/9ea12d6a-ef37-4882-b143-f603b744bb4f" />
+
 
 ## 1. System Overview
 
