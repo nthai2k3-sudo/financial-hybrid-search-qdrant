@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import json
+import re
 import argparse
 from pathlib import Path
 from typing import Optional
@@ -22,7 +23,21 @@ from hybrid_search.models.filter import MetadataFilter
 from hybrid_search.retrieval.engine import SearchEngine
 
 
-console = Console()
+# Configure UTF-8 streams on Windows to prevent UnicodeEncodeError with filing characters
+if sys.platform == "win32":
+    import io
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    if hasattr(sys.stderr, "reconfigure"):
+        try:
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+console = Console(force_terminal=True, soft_wrap=False, highlight=False)
 
 
 def handle_ingest(args: argparse.Namespace) -> None:
@@ -66,6 +81,12 @@ def handle_index(args: argparse.Namespace) -> None:
 
 def handle_search(args: argparse.Namespace) -> None:
     """Handles 'search' CLI command."""
+    query_str = args.query or args.query_pos
+    if not query_str:
+        console.print("[bold red]Error: Search query is required. Example: hybrid-search search \"Revenue under ASC 606\"[/bold red]")
+        sys.exit(1)
+    args.query = query_str
+
     config = load_config()
     engine = SearchEngine(config=config)
 
@@ -102,17 +123,31 @@ def handle_search(args: argparse.Namespace) -> None:
 
 def _display_search_results(method: str, results: list, show_top_answer: bool = False) -> None:
     """Renders search results in a formatted table and highlights top factual excerpt."""
-    table = Table(title=f"[bold cyan]Method: {method.upper()}[/bold cyan]", show_header=True)
-    table.add_column("Rank", justify="center", style="cyan", width=6)
-    table.add_column("Score", justify="right", style="green", width=10)
-    table.add_column("Company", style="bold white", width=14)
-    table.add_column("Form / Section", style="dim", width=26)
-    table.add_column("Pinpointed Answer / Excerpt", style="white")
+    table = Table(
+        title=f"[bold cyan]Method: {method.upper()}[/bold cyan]",
+        show_header=True,
+        expand=True,
+    )
+    table.add_column("Rank", justify="center", style="cyan", width=6, no_wrap=True)
+    table.add_column("Score", justify="right", style="green", width=9, no_wrap=True)
+    table.add_column("Company", style="bold white", width=14, no_wrap=True)
+    table.add_column("Form / Section", style="dim", width=24)
+    table.add_column("Pinpointed Answer / Excerpt", style="white", ratio=3, no_wrap=False)
 
     for r in results:
-        row_summary = r.exact_answer if r.exact_answer else ((r.text[:220] + "...") if len(r.text) > 220 else r.text)
-        if len(row_summary) > 240:
-            row_summary = row_summary[:240] + "..."
+        # Prefer exact extracted answer if available
+        if r.exact_answer and len(r.exact_answer.strip()) > 10:
+            row_summary = r.exact_answer.strip()
+        else:
+            # Strip context header bracket [Company | Form | Section] for clean display
+            clean_body = re.sub(r"^\[.*?\]\s*", "", r.text).strip()
+            # Strip leading boilerplate table of contents if present
+            clean_body = re.sub(r"^(?:Table of Contents\s*|Index to Financial Statements\s*)+", "", clean_body, flags=re.IGNORECASE).strip()
+            row_summary = (clean_body[:240] + "...") if len(clean_body) > 240 else clean_body
+
+        if len(row_summary) > 280:
+            row_summary = row_summary[:280] + "..."
+
         table.add_row(
             str(r.rank),
             f"{r.score:.4f}",
@@ -189,6 +224,16 @@ def handle_info(args: argparse.Namespace) -> None:
         console.print(f"[bold yellow]Collection status:[/bold yellow] Not found or inaccessible ({err})")
 
 
+def handle_serve(args: argparse.Namespace) -> None:
+    """Handles 'serve' CLI command to launch the web UI and API server."""
+    import uvicorn
+    from hybrid_search.api import app
+
+    console.print(f"[bold green]Starting Financial Hybrid Search Web UI at http://{args.host}:{args.port}[/bold green]")
+    console.print("[dim]Open http://localhost:8000 in your web browser or open index.html directly.[/dim]")
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+
+
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -207,7 +252,8 @@ def main() -> None:
 
     # search
     search_p = subparsers.add_parser("search", help="Query the financial search engine")
-    search_p.add_argument("--query", "-q", required=True, help="Search query string")
+    search_p.add_argument("query_pos", nargs="?", default=None, help="Search query string (positional)")
+    search_p.add_argument("--query", "-q", default=None, help="Search query string (named)")
     search_p.add_argument(
         "--method",
         "-m",
@@ -216,16 +262,16 @@ def main() -> None:
         help="Retrieval configuration",
     )
 
-    search_p.add_argument("--k", type=int, default=10, help="Number of results")
-    search_p.add_argument("--ticker", help="Filter by ticker symbol (e.g. NVDA)")
+    search_p.add_argument("-k", "--k", type=int, default=10, help="Number of results")
+    search_p.add_argument("--ticker", "-t", help="Filter by ticker symbol (e.g. NVDA)")
     search_p.add_argument("--form", "--doc-type", dest="form", help="Filter by document type (e.g. 10-K, 10-Q)")
-    search_p.add_argument("--section", help="Filter by section title")
+    search_p.add_argument("--section", "-s", help="Filter by section title")
     search_p.add_argument("--verbose", "-v", action="store_true", help="Show full top answer insight panel")
 
 
     # benchmark
     bench_p = subparsers.add_parser("benchmark", help="Run full evaluation and benchmarking suite")
-    bench_p.add_argument("--k", type=int, default=10, help="Top-K evaluation rank")
+    bench_p.add_argument("-k", "--k", type=int, default=10, help="Top-K evaluation rank")
     bench_p.add_argument("--runs", type=int, default=3, help="Latency measurement repetitions per query")
     bench_p.add_argument("--category", help="Run benchmark on a specific category only")
     bench_p.add_argument("--dataset", help="Custom golden dataset YAML path")
@@ -233,6 +279,11 @@ def main() -> None:
 
     # info
     subparsers.add_parser("info", help="Display Qdrant collection and system information")
+
+    # serve (Web UI + API)
+    serve_p = subparsers.add_parser("serve", help="Launch the local interactive Web UI & REST API server")
+    serve_p.add_argument("--host", default="127.0.0.1", help="Host interface to bind (default: 127.0.0.1)")
+    serve_p.add_argument("--port", "-p", type=int, default=8000, help="Port to listen on (default: 8000)")
 
     args = parser.parse_args()
     if not args.command:
@@ -249,6 +300,8 @@ def main() -> None:
         handle_benchmark(args)
     elif args.command == "info":
         handle_info(args)
+    elif args.command == "serve":
+        handle_serve(args)
 
 
 if __name__ == "__main__":

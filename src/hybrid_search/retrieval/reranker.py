@@ -97,6 +97,18 @@ class NeuralReranker:
                         intent_score += 0.25
                 elif result.document_type in ["10-K", "20-F"]:
                     intent_score -= 0.35
+            else:
+                # General query (no specific timeframe): prefer latest annual 10-K for comprehensive policy/accounting definition
+                if result.document_type in ["10-K", "20-F"]:
+                    intent_score += 0.15
+
+            # Recency / Freshness Bonus (Latest filings take precedence when no older year requested)
+            recency_bonus = 0.0
+            if not target_year:
+                period_years = re.findall(r"\b(202[0-9])\b", f"{result.fiscal_period} {result.filing_date}")
+                if period_years:
+                    latest_yr = max(int(y) for y in period_years)
+                    recency_bonus = 0.10 * max(0, min(1.0, (latest_yr - 2022) / 3.0))
 
             # Original retrieval score normalized
             base_score = float(result.score)
@@ -109,8 +121,9 @@ class NeuralReranker:
                 0.25 * ans_coverage +
                 0.10 * coverage +
                 0.15 * metric_bonus +
-                0.15 * table_bonus +
-                0.20 * intent_score
+                0.10 * table_bonus +
+                0.15 * intent_score +
+                0.10 * recency_bonus
             )
 
             scored_results.append((cross_score, result))

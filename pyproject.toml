@@ -11,6 +11,11 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/satyam671/financial-hybrid-search-qdrant"
+Repository = "https://github.com/satyam671/financial-hybrid-search-qdrant"
+Issues = "https://github.com/satyam671/financial-hybrid-search-qdrant/issues"
 dependencies = [
     "pydantic>=2.7.0",
     "pyyaml>=6.0",

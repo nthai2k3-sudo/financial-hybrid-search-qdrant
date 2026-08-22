@@ -48,11 +48,21 @@ qdrant_data/
 *.cert
 secrets.yaml
 
-# IDEs & OS metadata
+# IDEs, AI agents & OS metadata
 .vscode/
 .idea/
+.agents/
+skills-lock.json
 *.swp
 *.swo
 .DS_Store
 Thumbs.db
 desktop.ini
+scratch/
+
+# Drafts, article outlines & internal notes
+article_outline.md
+Building Hybrid Search for Financial Intelligence.md
+*outline*.md
+*implementation_plan*.md
+

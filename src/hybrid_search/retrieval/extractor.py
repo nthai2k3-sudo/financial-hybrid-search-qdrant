@@ -60,19 +60,42 @@ class AnswerExtractor:
 
         scored_candidates: List[Tuple[float, str, bool]] = []
         for cand, is_table in candidates:
-            cand_words = set(re.findall(r"\w+", cand.lower()))
+            cand_lower = cand.lower()
+            cand_words = set(re.findall(r"\w+", cand_lower))
+            
+            # Direct token overlap
             overlap = len(keyword_set.intersection(cand_words))
-
-            # Bonus for numerical/percentage facts if query asks for percentage/how many
-            bonus = 0.0
-            if any(q in query.lower() for q in ["how many", "percentage", "revenue", "percent", "%", "total", "powers"]):
-                if re.search(r"\d+[\.,]?\d*%", cand) or re.search(r"\b\d{1,3}(?:,\d{3})*\b", cand) or "$" in cand or "%" in cand:
-                    bonus += 0.25
-
-            # Priority for specific company / geographic named entity matches
+            
+            # Stemmed / semantic synonym overlap for key risk, operational, and financial concepts
+            stem_synonyms = {
+                "supply": {"supplies", "supplier", "suppliers", "sourcing", "procurement", "materials"},
+                "bottlenecks": {"shortages", "shortage", "constraints", "bottleneck", "limits", "cycles", "delays", "unavailability", "unavailability"},
+                "disrupt": {"disruption", "disruptions", "delay", "delays", "impair", "hinder", "fail", "decline", "loss"},
+                "manufacturing": {"production", "fabrication", "operations", "manufacture", "wafers", "foundry"},
+                "chip": {"semiconductor", "semiconductors", "wafers", "silicon", "integrated", "circuits"},
+            }
             for kw in keyword_set:
-                if kw in cand_words and len(kw) >= 4:
-                    bonus += 0.1
+                syns = stem_synonyms.get(kw, set())
+                if syns and any(s in cand_words for s in syns):
+                    overlap += 0.75
+
+            # Bonus for numerical/percentage facts if query asks for percentage/how many/amounts
+            bonus = 0.0
+            if any(q in query.lower() for q in ["how many", "percentage", "revenue", "percent", "%", "total", "spend", "cost"]):
+                if re.search(r"\d+[\.,]?\d*%", cand) or re.search(r"\b\d{1,3}(?:,\d{3})*\b", cand) or "$" in cand or "%" in cand:
+                    bonus += 0.35
+
+            # Substantive content bonus: specific concrete materials, named entities, lists (such as, including)
+            if any(term in cand_lower for term in ["such as", "including", "limited number of", "shortages", "unavailability", "silicon wafers", "photoresist", "chemicals", "export licenses"]):
+                bonus += 0.30
+
+            # Causal risk impact bonus
+            if any(term in cand_lower for term in ["unable to obtain", "limited supply", "delivery cycles", "result in", "adversely affect"]):
+                bonus += 0.20
+
+            # Penalty for generic procedural transition sentences / platitudes
+            if re.match(r"^(?:to better manage|we evaluate and project|we have also implemented|in order to|we believe that|we continue to)", cand_lower):
+                bonus -= 0.40
 
             score = (overlap / (len(keyword_set) + 1e-5)) + bonus
             scored_candidates.append((score, cand, is_table))
@@ -210,14 +233,21 @@ class AnswerExtractor:
 
         # 2. Split lines for table rows vs standard narrative text
         lines = text.split("\n")
+        running_header_pattern = re.compile(
+            r"(?:\|\s*)?(?:Financial\s+Statements|Notes\s+to\s+(?:Condensed\s+)?Financial\s+Statements|Table\s+of\s+Contents|Part\s+[I|V|X]+|Item\s+\d+[A-Z]?)(?:\s*\|\s*(?:Financial\s+Statements|Notes\s+to\s+(?:Condensed\s+)?Financial\s+Statements|Table\s+of\s+Contents|\d+))*\s*(?:\|\s*)?",
+            re.IGNORECASE
+        )
+
         for line in lines:
             line_str = line.strip()
             if not line_str:
                 continue
 
-            # Clean leading/trailing pipes
-            clean_line = re.sub(r"^[\|\s]+", "", line_str).strip()
-            if not clean_line:
+            # Strip embedded running headers like "Financial Statements | Notes to Financial Statements | 8 | Table of Contents"
+            clean_line = running_header_pattern.sub(" ", line_str).strip()
+            # Clean leading/trailing pipes and bullets
+            clean_line = re.sub(r"^[\|\s]+", "", clean_line).strip()
+            if not clean_line or len(clean_line) < 15:
                 continue
 
             # Check if this line is genuinely a tabular row (multiple short cells) vs narrative text
@@ -240,15 +270,35 @@ class AnswerExtractor:
                     sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9(\"])", bp.strip())
                     for s in sentences:
                         s_clean = s.strip()
+                        s_clean = running_header_pattern.sub("", s_clean).strip()
+                        s_clean = re.sub(r"^[\•\*\-\s]+", "", s_clean).strip()
                         if len(s_clean) > 20:
                             candidates.append((s_clean, False))
 
-        return candidates
+        # Boilerplate phrases to ignore as standalone answers
+        boilerplate_regex = re.compile(
+            r"^(?:table of contents|index to financial statements|part [i|v|x]+|item \d+[a-z]?|notes to (?:condensed )?consolidated financial statements|financial statements and supplementary data|\d+)\.?$",
+            re.IGNORECASE
+        )
+
+        return [
+            (cand, is_tbl) for cand, is_tbl in candidates
+            if not boilerplate_regex.match(cand.strip()) and len(cand.strip()) > 15
+        ]
 
     @classmethod
     def _clean_answer_text(cls, text: str) -> str:
         """Cleans extracted candidate string into a concise, readable fact."""
         cleaned = text.strip()
+        # Strip running page header patterns
+        cleaned = re.sub(
+            r"^(?:Financial\s+Statements\s+|Notes\s+to\s+(?:Condensed\s+)?Financial\s+Statements\s+|\d+\s+|Table\s+of\s+Contents\s*)+",
+            "",
+            cleaned,
+            flags=re.IGNORECASE
+        ).strip()
+        cleaned = re.sub(r"^[\|\s\•\*\-]+", "", cleaned).strip()
+        cleaned = re.sub(r"[\|\s]+$", "", cleaned).strip()
         if "|" in cleaned:
             cells = [c.strip() for c in cleaned.split("|") if c.strip() and c.strip() != "$"]
             cleaned = " | ".join(cells)
