@@ -82,6 +82,9 @@ Financial intelligence documents (SEC filings, 10-Ks, earnings releases) contain
 ---
 
 ## 4. Financial Corpus & Dataset Specifications
+<img width="1800" height="1000" alt="image" src="https://github.com/user-attachments/assets/e28be98f-4d9c-49e7-95df-7fe52d4db15d" />
+
+> A collage of screenshots from SEC filings highlights the type of data we're working with on this project | Table of Contents, links, separators, embedded iXBRL tags, and dense footnote markers. This kind of data is challenging to break into chunks and retrieve accurately from millions or even billions of embeddings.
 
 - **Corpus Scale:** 8,609 contextualized chunks (2,542,471 words, ~500 tokens/chunk with 100-token overlap).
 - **Filings Ingested:** 47 SEC EDGAR filings spanning **FY2023–FY2025**.
@@ -340,6 +343,8 @@ Launch the local interactive web interface and FastAPI backend:
 ```bash
 python -m hybrid_search.cli serve --port 8000
 ```
+<img width="1800" height="876" alt="image" src="https://github.com/user-attachments/assets/07fd732b-8fbc-4567-b988-f225d015e63b" />
+
 Open **[http://localhost:8000](http://localhost:8000)** in your browser to access:
 - **Side-by-Side Retrieval Comparator:** Compare results across all 5 search methods + Stage-2 reranking in real time.
 - **Interactive Metadata Filters:** Filter candidates by ticker (`NVDA`, `AAPL`), filing form (`10-K`, `10-Q`), or SEC item.
@@ -359,63 +364,91 @@ Run these paired empirical demonstration queries to observe firsthand where each
   ```bash
   python -m hybrid_search.cli search --query "Accounting Standards Codification ASC 606 revenue recognition" --method bm25 --ticker TSLA -k 3 -v
   ```
+  <img width="1800" height="931" alt="image" src="https://github.com/user-attachments/assets/9da6f1ee-a1f7-4640-8dfc-a346308bfa67" />
+
 - **❌ Failing Query (Vocabulary Mismatch / Synonyms):**
   ```bash
   python -m hybrid_search.cli search --query "What were the primary legal disputes facing automated driving systems?" --method bm25 --ticker TSLA -k 3 -v
   ```
+  <img width="1800" height="737" alt="image" src="https://github.com/user-attachments/assets/cabbf2bf-a0bb-4f75-b9f4-ce5bb6f27b37" />
+
 
 #### 2. Dense Vector (BGE-Small)
 - **✅ Winning Query (Broad Thematic & Operational Risk):**
   ```bash
   python -m hybrid_search.cli search --query "What supply chain bottlenecks could disrupt advanced chip manufacturing?" --method dense --ticker TSM -k 3 -v
   ```
+  <img width="1800" height="768" alt="image" src="https://github.com/user-attachments/assets/194c04d7-cd28-4d9b-a81a-66b5e3fbe60c" />
+
 - **❌ Failing Query (Exact Product SKU Blindness):**
   ```bash
   python -m hybrid_search.cli search --query "Find disclosures regarding MI300 accelerator shipments and architecture" --method dense --ticker AMD -k 3 -v
   ```
+  <img width="1800" height="899" alt="image" src="https://github.com/user-attachments/assets/7791daca-3f40-46b6-8fec-f13c769cd7b8" />
+
 
 #### 3. Sparse (SPLADE Neural Sparse)
 - **✅ Winning Query (Vocabulary Expansion across Architecture):**
   ```bash
   python -m hybrid_search.cli search --query "How does NVIDIA expand its computing platform through graphics processing units and networking architecture?" --method sparse --ticker NVDA -k 3 -v
   ```
+  <img width="1800" height="834" alt="image" src="https://github.com/user-attachments/assets/4b635749-1f80-4c3f-a6bf-e5761de1d675" />
+
 - **❌ Failing Query (Temporal Confusion on General Queries):**
   ```bash
   python -m hybrid_search.cli search --query "What were Apple's primary hardware products and platform services described in fiscal year 2024?" --method sparse --ticker AAPL -k 3 -v
   ```
+  <img width="1800" height="992" alt="image" src="https://github.com/user-attachments/assets/f693cac3-c343-4398-8237-de3a29962b2d" />
+
 
 #### 4. BM25 + Dense Hybrid (Server-Side RRF)
 - **✅ Winning Query (Named Regulatory Entity + Conceptual Scrutiny):**
   ```bash
   python -m hybrid_search.cli search --query "What legal proceedings and antitrust investigations did Meta face from regulators?" --method bm25_dense --ticker META -k 3 -v
   ```
+  <img width="1800" height="780" alt="image" src="https://github.com/user-attachments/assets/cae3f0e5-575b-44f9-a09a-073d5768c6ea" />
+
 - **❌ Failing Query (Capital Allocation Schedules):**
   ```bash
   python -m hybrid_search.cli search --query "How much did Microsoft spend under the Stock Repurchase Program in fiscal year 2024?" --method bm25_dense --ticker MSFT -k 3 -v
   ```
+<img width="1800" height="714" alt="image" src="https://github.com/user-attachments/assets/c4f3f865-da26-4c9b-a2ab-26f7757adb69" />
+
 
 #### 5. Sparse + Dense Hybrid (Server-Side RRF)
 - **✅ Winning Query (High-Recall Candidate Retrieval):**
   ```bash
   python -m hybrid_search.cli search --query "How did data center GPU demand drive Nvidia's compute and networking revenue in fiscal year 2024?" --method sparse_dense --ticker NVDA -k 3 -v
   ```
+<img width="1800" height="700" alt="image" src="https://github.com/user-attachments/assets/64741da8-7058-45e2-897f-9a75ed3c91dc" />
+  
 - **❌ Failing Query (Table Row Extraction Ordering):**
   ```bash
   python -m hybrid_search.cli search --query "What was Apple's total Services revenue in fiscal year 2024 compared to 2023?" --method sparse_dense --ticker AAPL -k 3 -v
   ```
+  <img width="1800" height="833" alt="image" src="https://github.com/user-attachments/assets/67af2707-0a4f-4699-9144-117ab63a2e2c" />
+
+
 
 #### 6. Downstream Neural Reranker (Stage-2 Tabular Precision)
 - **✅ Winning Query (Tabular Precision & Year Alignment):**
   ```bash
-  python -m hybrid_search.cli search --query "What was Apple's total Services revenue in fiscal year 2024 compared to 2023?" --method rerank --ticker AAPL -k 3 -v
+  python -m hybrid_search.cli search --query "What was Google Cloud revenue in fiscal year 2023?"  --method rerank --ticker GOOGL -k 3 -v
   ```
+  <img width="1800" height="797" alt="image" src="https://github.com/user-attachments/assets/94f5eae2-30e9-4b50-b185-39dfb1b0a48e" />
+
+  
 
 ### 8.2 Compare All Retrieval Configurations Side-by-Side
 
 Executes a single query across all retrieval methods to inspect ranking differences in real time:
 ```bash
-python -m hybrid_search.cli search "capital expenditure AI accelerator demand softening" --method all -k 3
+python -m hybrid_search.cli search --query "What was Google Cloud revenue in fiscal year 2023?" --method all --ticker GOOGL -k 3
 ```
+<img width="1800" height="814" alt="image" src="https://github.com/user-attachments/assets/18d516e1-0240-45f9-898b-19635430fbe2" />
+<img width="1800" height="747" alt="image" src="https://github.com/user-attachments/assets/71da2386-78ce-46aa-8f21-7a763ef2ee71" />
+
+
 
 ### 8.3 Execute Metadata-Filtered Search
 
