@@ -9,7 +9,8 @@
 
 > 📖 **Accompanying Technical Deep-Dive Article:**  
 > This repository provides the production reference implementation and empirical benchmarking suite for the article:  
-> **[Building Hybrid Search for Financial Intelligence: An Empirical Comparison of Lexical, Dense, Sparse, and Dual-Stage Reranking on Qdrant](https://medium.com/@satyam671/financial-hybrid-search-qdrant)**  
+> **[Building Hybrid Search for Financial Intelligence
+(From Pure BM25 to Dense Vectors and Splade With Qdrant, Why a Single Retrieval Method Will Never Be Enough, Highlighting Where Each One Excels and Where Each Falls Short)](https://ai.gopubby.com/rag-hybrid-search-for-financial-intelligence-qdrant-2d98cda298b8)**  
 > *(Covers theoretical mechanics, failure modes of single-vector systems, and vector database evaluation criteria).*
 ---
 <img width="1536" height="1024" alt="hybrid search qdrant" src="https://github.com/user-attachments/assets/b8de1984-924d-470d-95f2-f2390d1bc17c" />
