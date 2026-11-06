@@ -20,7 +20,7 @@ qdrant:
   url: "http://localhost:6333"         # For Qdrant Cloud: "https://your-cluster.eu-central.aws.cloud.qdrant.io:6333"
   api_key: null                        # For Qdrant Cloud: "your-api-key-here" (or set QDRANT_API_KEY env var)
   local_path: "qdrant_data"
-  prefer_local_embedded: false
+  prefer_local_embedded: true
   collection_name: "financial_docs"
   dense_vector_size: 384
   upsert_batch_size: 100

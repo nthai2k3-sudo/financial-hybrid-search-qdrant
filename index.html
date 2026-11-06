@@ -170,6 +170,7 @@
             <div class="flex p-1 bg-slate-100 dark:bg-black rounded-lg border border-slate-200 dark:border-dark-border text-xs font-semibold">
               <button onclick="setSearchMode('single')" id="mode-single" class="px-4 py-1.5 rounded-md bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-bold shadow-sm">Single Configuration</button>
               <button onclick="setSearchMode('compare_all')" id="mode-compare" class="px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">⚡ Compare All 6 Side-by-Side</button>
+              <button onclick="setSearchMode('compare_dimensions')" id="mode-dimensions" class="px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">↔ Compare 384d vs 768d</button>
             </div>
           </div>
 
@@ -356,6 +357,9 @@
         <!-- Compare All 6 Methods Grid Container -->
         <div id="compare-results-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Dynamically filled with 6 method columns -->
+        </div>
+        <div id="dimension-compare-grid" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Dynamically filled with 384d and 768d result columns -->
         </div>
       </div>
 
@@ -1248,10 +1252,18 @@
         document.getElementById('mode-single').className = 'px-4 py-1.5 rounded-md bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-bold shadow-sm';
         document.getElementById('mode-compare').className = 'px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white';
         document.getElementById('single-method-container').classList.remove('hidden');
+      } else if (mode === 'compare_dimensions') {
+        document.getElementById('mode-dimensions').className = 'px-4 py-1.5 rounded-md bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-bold shadow-sm';
+        document.getElementById('mode-single').className = 'px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400';
+        document.getElementById('mode-compare').className = 'px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400';
+        document.getElementById('single-method-container').classList.remove('hidden');
       } else {
         document.getElementById('mode-compare').className = 'px-4 py-1.5 rounded-md bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-bold shadow-sm';
         document.getElementById('mode-single').className = 'px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white';
         document.getElementById('single-method-container').classList.add('hidden');
+      }
+      if (mode !== 'compare_dimensions' && mode !== 'single') {
+        document.getElementById('mode-dimensions').className = 'px-4 py-1.5 rounded-md text-slate-600 dark:text-zinc-400';
       }
     }
 
@@ -1360,6 +1372,7 @@
       document.getElementById('direct-answer-card').classList.add('hidden');
       document.getElementById('single-results-list').classList.add('hidden');
       document.getElementById('compare-results-grid').classList.add('hidden');
+      document.getElementById('dimension-compare-grid').classList.add('hidden');
 
       const payload = {
         query: query,
@@ -1372,7 +1385,8 @@
       };
 
       try {
-        const res = await fetch(`${API_BASE}/api/search`, {
+        const endpoint = currentMode === 'compare_dimensions' ? '/api/compare-dimensions' : '/api/search';
+        const res = await fetch(`${API_BASE}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1388,6 +1402,8 @@
 
         if (currentMode === 'compare_all') {
           renderCompareAll(data);
+        } else if (currentMode === 'compare_dimensions') {
+          renderDimensionCompare(data);
         } else {
           renderSingleResults(data);
         }
@@ -1505,6 +1521,39 @@
       });
 
       window.lastCompareData = data.comparisons;
+      lucide.createIcons();
+    }
+
+    function renderDimensionCompare(data) {
+      const grid = document.getElementById('dimension-compare-grid');
+      grid.innerHTML = '';
+      grid.classList.remove('hidden');
+      const labels = {
+        '384': ['BGE-small · 384 chiều', 'financial_docs', 'text-blue-600 dark:text-blue-400'],
+        '768': ['BGE-base · 768 chiều', 'financial_docs_bge768', 'text-purple-600 dark:text-purple-400']
+      };
+      ['384', '768'].forEach(dimension => {
+        const items = data.comparisons[dimension] || [];
+        const col = document.createElement('div');
+        col.className = 'p-4 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border space-y-3 shadow-sm';
+        col.innerHTML = `
+          <div class="pb-2.5 border-b border-slate-200 dark:border-dark-border">
+            <h4 class="font-bold text-base ${labels[dimension][2]}">${labels[dimension][0]}</h4>
+            <span class="text-xs text-slate-500 dark:text-zinc-500 font-mono">${labels[dimension][1]} · ${items.length} hits</span>
+          </div>
+          ${items.map(item => `
+            <div class="p-3 rounded-lg bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-dark-borderSubtle text-xs space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700 dark:text-zinc-400">#${item.rank} <span class="font-mono text-brand-600 dark:text-brand-400">${item.ticker}</span> (${item.form_type})</span>
+                <span class="font-mono text-xs text-slate-500 dark:text-zinc-400 font-bold">Score: ${item.score}</span>
+              </div>
+              <div class="text-xs text-slate-700 dark:text-zinc-300 leading-snug">${item.excerpt}</div>
+              <div class="text-xs text-slate-500 dark:text-zinc-500">${item.section_title || ''}</div>
+            </div>
+          `).join('') || '<div class="text-xs text-slate-400 py-4 text-center">No hits</div>'}
+        `;
+        grid.appendChild(col);
+      });
       lucide.createIcons();
     }
 

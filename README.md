@@ -300,7 +300,7 @@ print(f"Pinpointed Fact: {reranked[0].exact_answer}")
 
 ```bash
 # Clone repository
-git clone https://github.com/satyam671/financial-hybrid-search-qdrant.git
+git clone https://github.com/nthai2k3-sudo/financial-hybrid-search-qdrant.git
 cd financial-hybrid-search-qdrant
 
 # Create virtual environment & activate
@@ -311,6 +311,11 @@ python -m venv .venv
 # Install package in editable mode
 pip install -e .
 ```
+
+> The repository is designed to be public and reproducible. Local Qdrant storage,
+> downloaded SEC data, model caches, raw benchmark artifacts, and manual annotation
+> keys are intentionally excluded from Git. Run the ingestion/indexing steps below
+> to build a fresh local dataset.
 
 ### 2. Qdrant Storage (Docker or Local Embedded)
 
@@ -331,7 +336,7 @@ python -m hybrid_search.cli ingest
 ```
 
 #### Step 2: Chunk & Build Qdrant Index
-Extracts full narrative sections, injects context headers, computes 3 vector spaces (`dense`, `bm25`, `sparse`), and indexes all 8,609 points:
+Extracts full narrative sections, injects context headers, computes 3 vector spaces (`dense`, `bm25`, `sparse`), and indexes the locally generated corpus:
 ```bash
 python -m hybrid_search.cli index
 ```
@@ -348,9 +353,18 @@ python -m hybrid_search.cli serve --port 8000
 
 Open **[http://localhost:8000](http://localhost:8000)** in your browser to access:
 - **Side-by-Side Retrieval Comparator:** Compare results across all 5 search methods + Stage-2 reranking in real time.
+- **384d vs 768d Comparator:** Compare the frozen `financial_docs` 384-dimensional collection with the optional `financial_docs_bge768` experiment collection.
 - **Interactive Metadata Filters:** Filter candidates by ticker (`NVDA`, `AAPL`), filing form (`10-K`, `10-Q`), or SEC item.
 - **Pinpointed Table Answer Viewer:** Visual direct fact highlighting and multi-column table extraction.
 - **Live Empirical Benchmark Dashboard:** Run and view evaluation metrics directly from the browser.
+
+### 4.1 Reproducing the dimension experiment
+
+The preregistered comparison and generated reports are under
+`experiments/dim_384_vs_768/`. The public repository contains the experiment
+scripts and reports, but not the local Qdrant snapshot, model cache, raw result
+files, or manual annotation key. The 768-dimensional collection must be built
+locally before using the web comparator.
 
 ---
 

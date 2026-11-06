@@ -36,6 +36,7 @@ data/raw/
 data/processed/
 qdrant_storage/
 qdrant_data/
+qdrant_data_empty_backup/
 *.db
 *.sqlite
 
@@ -60,9 +61,15 @@ Thumbs.db
 desktop.ini
 scratch/
 
+# Experiment raw artifacts and private/manual annotation keys
+experiments/dim_384_vs_768/audit/
+experiments/dim_384_vs_768/results/raw/
+experiments/dim_384_vs_768/phase2/annotation/
+experiments/dim_384_vs_768/phase2/audit/
+experiments/dim_384_vs_768/phase2/results/raw/
+
 # Drafts, article outlines & internal notes
 article_outline.md
 Building Hybrid Search for Financial Intelligence.md
 *outline*.md
 *implementation_plan*.md
-

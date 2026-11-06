@@ -36,6 +36,7 @@ class BenchmarkRequest(BaseModel):
 
 
 _lazy_engine: Optional[SearchEngine] = None
+_dimension_engines: Dict[str, SearchEngine] = {}
 
 
 def get_default_engine() -> SearchEngine:
@@ -64,6 +65,20 @@ def create_app(engine: Optional[SearchEngine] = None) -> FastAPI:
 
     def _get_engine() -> SearchEngine:
         return engine if engine is not None else get_default_engine()
+
+    def _get_dimension_engine(dimension: str) -> SearchEngine:
+        if dimension not in _dimension_engines:
+            base = _get_engine()
+            collection = "financial_docs" if dimension == "384" else "financial_docs_bge768"
+            model = "BAAI/bge-small-en-v1.5" if dimension == "384" else "BAAI/bge-base-en-v1.5"
+            qdrant = base.config.qdrant.model_copy(
+                update={"collection_name": collection, "local_path": str(get_project_root() / "qdrant_data"), "prefer_local_embedded": True}
+            )
+            config = base.config.model_copy(
+                update={"qdrant": qdrant, "embeddings": base.config.embeddings.model_copy(update={"dense_model": model})}
+            )
+            _dimension_engines[dimension] = SearchEngine(config=config, client=base.client)
+        return _dimension_engines[dimension]
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
@@ -267,6 +282,42 @@ def create_app(engine: Optional[SearchEngine] = None) -> FastAPI:
             "latency_ms": round(latency_ms, 2),
             "direct_answer": top_extracted,
             "results": items,
+        }
+
+    @app.post("/api/compare-dimensions")
+    async def compare_dimensions(req: SearchRequest) -> Dict[str, Any]:
+        """Runs the same query and retrieval method against the frozen 384d and 768d collections."""
+        filters = MetadataFilter(
+            tickers=req.tickers or None,
+            document_types=req.form_types or None,
+            sections=req.section_types or None,
+            filing_date_start=req.filing_date_start or None,
+            filing_date_end=req.filing_date_end or None,
+        )
+        comparisons: Dict[str, Any] = {}
+        started = time.perf_counter()
+        for dimension in ("384", "768"):
+            eng = _get_dimension_engine(dimension)
+            results = eng.search(query=req.query, method=req.method, k=req.k, filters=filters)
+            comparisons[dimension] = [
+                {
+                    "rank": index + 1,
+                    "score": round(result.score, 4),
+                    "ticker": result.ticker,
+                    "company_name": result.company,
+                    "form_type": result.document_type,
+                    "fiscal_year": result.fiscal_period,
+                    "section_title": result.section,
+                    "excerpt": result.exact_answer or result.text[:240] + "...",
+                    "full_text": result.text,
+                }
+                for index, result in enumerate(results)
+            ]
+        return {
+            "query": req.query,
+            "method": req.method,
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            "comparisons": comparisons,
         }
 
     @app.post("/api/benchmark")
